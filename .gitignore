@@ -1,0 +1,6 @@
+DDPM/data/
+DDPM/runs/
+DDPM/checkpoints/
+Diffusion_for_RL/data/
+Diffusion_for_RL/runs/
+Diffusion_for_RL/checkpoints/
