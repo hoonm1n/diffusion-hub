@@ -7,8 +7,10 @@ from model import UNet
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = UNet(img_channels=3, base_channels=128, t_emb_dim=128).to(device)
-    model.load_state_dict(torch.load("./checkpoints/model_state_dict_4.pth", map_location=device))
+    model = UNet(img_channels=3, base_channels=128, t_emb_dim=512).to(device)
+    # model.load_state_dict(torch.load("./checkpoints/model_state_dict_5.pth", map_location=device))
+    checkpoint = torch.load('./checkpoints/ddpm_checkpoint_1.pth', map_location=device)
+    model.load_state_dict(checkpoint['ema_state_dict'])
 
     ddpm = DDPM(model, device, T=1000)
 
@@ -22,7 +24,7 @@ def main():
 
     plt.imshow(img)
     plt.axis('off')
-    plt.savefig("./sample/sample3.png")  
+    plt.savefig("./sample/sample5.png")  
     plt.close()  
 
 

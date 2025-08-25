@@ -63,7 +63,7 @@ class Upsample(nn.Module):
 
 
 class UNet(nn.Module):
-    def __init__(self, img_channels=3, base_channels=64, t_emb_dim=128):
+    def __init__(self, img_channels=3, base_channels=64, t_emb_dim=512):
         super().__init__()
         self.timestep_embedding = SinusoidalPosEmb(t_emb_dim)
         self.time_mlp = nn.Sequential(
@@ -79,15 +79,21 @@ class UNet(nn.Module):
         self.res2 = ResBlock(base_channels, base_channels*2, t_emb_dim)
         self.down2 = Downsample(base_channels*2)
         self.res3 = ResBlock(base_channels*2, base_channels*4, t_emb_dim)
+        self.down3 = Downsample(base_channels*4)     
+        self.res4 = ResBlock(base_channels*4, base_channels*8, t_emb_dim)  
 
         # decoder
-        self.up1 = Upsample(base_channels*4)
-        self.res4 = ResBlock(base_channels * 4, base_channels * 2, t_emb_dim)
-        self.up2 = Upsample(base_channels * 2)
-        self.res5 = ResBlock(base_channels * 2, base_channels, t_emb_dim)
+        self.up1 = Upsample(base_channels*8)  
+        self.res5 = ResBlock(base_channels*8, base_channels*4, t_emb_dim)
+        self.up2 = Upsample(base_channels*4)
+        self.res6 = ResBlock(base_channels * 4, base_channels * 2, t_emb_dim)
+        self.up3 = Upsample(base_channels * 2)
+        self.res7 = ResBlock(base_channels * 2, base_channels, t_emb_dim)
 
         self.skip_conv1 = nn.Conv2d(256, 512, kernel_size=1)
         self.skip_conv2 = nn.Conv2d(128, 256, kernel_size=1)
+        self.skip_conv3 = nn.Conv2d(512, 1024, kernel_size=1)
+
 
 
         self.conv_out = nn.Conv2d(base_channels, img_channels, 1)
@@ -104,12 +110,16 @@ class UNet(nn.Module):
         x2 = self.res2(x2, t_emb)
         x3 = self.down2(x2)
         x3 = self.res3(x3, t_emb)
+        x4 = self.down3(x3)
+        x4 = self.res4(x4, t_emb)
 
         # decoder
-        x4 = self.up1(x3)
-        x4 = self.res4(x4 + self.skip_conv1(x2), t_emb)  # skip connection 
-        x5 = self.up2(x4)
-        x5 = self.res5(x5 + self.skip_conv2(x1), t_emb)  # skip connection 
+        x5 = self.up1(x4)
+        x5 = self.res5(x5 + self.skip_conv3(x3), t_emb)  # skip connection 
+        x6 = self.up2(x5)
+        x6 = self.res6(x6 + self.skip_conv1(x2), t_emb)  # skip connection 
+        x7 = self.up3(x6)
+        x7 = self.res7(x7 + self.skip_conv2(x1), t_emb)  # skip connection 
 
-        out = self.conv_out(x5)
+        out = self.conv_out(x7)
         return out

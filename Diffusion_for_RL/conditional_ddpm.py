@@ -85,8 +85,9 @@ class ConditionalDDPM:
     def sample(self, states):
         self.model.eval()
         batch_size, state_dim = states.shape
+        states = torch.tensor(states, dtype=torch.float32).to(self.device)
         x = torch.randn(batch_size, self.model.net[-1].out_features).to(self.device)   # action_dim
-
+    
         for t in reversed(range(self.T)):
             if t > 0:
                 z = torch.randn_like(x)

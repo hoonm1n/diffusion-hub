@@ -13,15 +13,16 @@ def main():
     ])
 
     train_dataset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=128, shuffle=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=256, shuffle=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = UNet(img_channels=3, base_channels=128, t_emb_dim=128)
+    model = UNet(img_channels=3, base_channels=128, t_emb_dim=512)
+    model.load_state_dict(torch.load('./checkpoints/model_state_dict_5.pth', map_location=device))
     ddpm = DDPM(model, device, T=1000)
-    optimizer = torch.optim.AdamW(ddpm.model.parameters(), lr=2e-4, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(ddpm.model.parameters(), lr=3e-4, weight_decay=1e-4)
 
-    ddpm.train(train_loader, optimizer, epochs=4000)
+    ddpm.train(train_loader, optimizer, epochs=6000)
 
 
 
